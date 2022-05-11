@@ -94,14 +94,14 @@ class ImageGenerator:
                 rotation_val_sel = np.random.randint(0, 3, n_elements_to_rotate)
                 for i in range(n_elements_to_rotate):
                     if rotation_val_sel[i] == 0:
-                        extracted_images[i] = 255*rotate(extracted_images[i], 90)
+                        extracted_images[i] = np.array(255*rotate(extracted_images[i], 90), dtype="uint8")
                     elif rotation_val_sel[i] == 1:
-                        extracted_images[i] = 255*rotate(extracted_images[i], 180)
+                        extracted_images[i] = np.array(255*rotate(extracted_images[i], 180), dtype="uint8")
                     else:
-                        extracted_images[i] = 255*rotate(extracted_images[i], 270)
+                        extracted_images[i] = np.array(255*rotate(extracted_images[i], 270), dtype="uint8")
 
             for i in range(self.N_images):
-                extracted_images[i] = 255*resize(extracted_images[i], self.image_size)
+                extracted_images[i] = np.array(255*resize(extracted_images[i], self.image_size), dtype="uint8")
 
             self.processed_images = extracted_images
             self.processed_labels = class_names
