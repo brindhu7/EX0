@@ -9,5 +9,5 @@ obj2.draw()
 obj2.show()
 
 from generator import ImageGenerator
-gen = ImageGenerator("exercise_data", "Labels.json", 12, [32, 32, 3], rotation=False, mirroring=False, shuffle=False)
+gen = ImageGenerator("exercise_data", "Labels.json", 12, [32, 32, 3], rotation=True, mirroring=True, shuffle=True)
 gen.show()

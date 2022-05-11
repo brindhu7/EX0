@@ -34,6 +34,7 @@ class ImageGenerator:
         self.shuffle = shuffle
         self.current_epoch = 0
         self.batch_index = 0
+        self.process_once = True
 
         # opening the JSON files - Getting the labels for all images
         f = open(self.label_path)
@@ -69,33 +70,44 @@ class ImageGenerator:
         # Note that your amount of total data might not be divisible without remainder with the batch_size.
         # Think about how to handle such cases
 
-        #Shuffling extracted_images and class_names
-        if self.shuffle:
-            permutation_indices = np.random.permutation(self.N_images)
-            extracted_images = self.extracted_images[permutation_indices]
-            class_names = self.class_names[permutation_indices]
+        if self.process_once:
+            self.process_once = False
+            # Shuffling extracted_images and class_names
+            if self.shuffle:
+                permutation_indices = np.random.permutation(self.N_images)
+                extracted_images = self.extracted_images[permutation_indices]
+                class_names = self.class_names[permutation_indices]
+            else:
+                extracted_images = self.extracted_images.copy()
+                class_names = self.class_names.copy()
+
+            #Mirroring n random images that batch contains both mirrored and non-mirrored images
+            if self.mirroring:
+                n_elements_to_flip = np.random.randint(self.N_images)
+                random_index_to_mirror = np.random.randint(0, self.N_images, n_elements_to_flip)
+                for i in range(n_elements_to_flip):
+                    extracted_images[random_index_to_mirror[i]] = np.fliplr(extracted_images[random_index_to_mirror[i]])
+
+            #Rotating n random images that batch contains both rotated and non-rotated images
+            if self.rotation:
+                n_elements_to_rotate = np.random.randint(self.N_images)
+                rotation_val_sel = np.random.randint(0, 3, n_elements_to_rotate)
+                for i in range(n_elements_to_rotate):
+                    if rotation_val_sel[i] == 0:
+                        extracted_images[i] = 255*rotate(extracted_images[i], 90)
+                    elif rotation_val_sel[i] == 1:
+                        extracted_images[i] = 255*rotate(extracted_images[i], 180)
+                    else:
+                        extracted_images[i] = 255*rotate(extracted_images[i], 270)
+
+            for i in range(self.N_images):
+                extracted_images[i] = 255*resize(extracted_images[i], self.image_size)
+
+            self.processed_images = extracted_images
+            self.processed_labels = class_names
         else:
-            extracted_images = self.extracted_images.copy()
-            class_names = self.class_names.copy()
-
-        #Mirroring n random images that batch contains both mirrored and non-mirrored images
-        if self.mirroring:
-            n_elements_to_flip = np.random.randint(self.N_images)
-            random_index_to_mirror = np.random.randint(0, self.N_images, n_elements_to_flip)
-            for i in range(n_elements_to_flip):
-                extracted_images[random_index_to_mirror[i]] = np.fliplr(extracted_images[random_index_to_mirror[i]])
-
-        #Rotating n random images that batch contains both mirrored and non-mirrored images
-        if self.rotation:
-            n_elements_to_rotate = np.random.randint(self.N_images)
-            rotation_val_sel = np.random.randint(0, 3, n_elements_to_rotate)
-            for i in range(n_elements_to_rotate):
-                if rotation_val_sel[i] == 0:
-                    extracted_images[i] = rotate(extracted_images[i], 90)
-                elif rotation_val_sel[i] == 1:
-                    extracted_images[i] = rotate(extracted_images[i], 180)
-                else:
-                    extracted_images[i] = rotate(extracted_images[i], 270)
+            extracted_images = self.processed_images
+            class_names = self.processed_labels
 
         #If last batch is smaller than others, completing batch by reusing images from beginning of training data set
         batch_indices = np.arange(self.batch_index, self.batch_index + self.batch_size)
@@ -106,35 +118,11 @@ class ImageGenerator:
         labels = class_names[batch_indices]
         self.batch_index = self.batch_index + self.batch_size
 
-        #for i in range(len(images)):
-        #    images[i] = resize(images[i], self.image_size)
 
         #Updating value of current epoch
         if max(batch_indices) == len(extracted_images) - 1:
             self.current_epoch += 1
-
-        """
-        newbatch_start = 0
-        images = np.empty((self.batch_size, self.image_size[0], self.image_size[1], self.image_size[2]))
-        labels = []
-        for i in range(newbatch_start, newbatch_start + self.batch_size):
-            images[i] = resize(extracted_images[i], self.image_size)
-            if self.rotation:
-                n = random.randint(1, 3)
-                if n == 1:
-                    images[i] = rotate(images[i], 90)
-                elif n == 2:
-                    images[i] = rotate(images[i], 180)
-                else:
-                    images[i] = rotate(images[i], 270)
-
-
-            
-
-            # string not stored in array so save each label in list
-            label = self.class_name(image_list[i])
-            labels.append(label)
-        """
+            self.process_once = True
 
         return images, labels
 
