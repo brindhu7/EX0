@@ -75,7 +75,8 @@ class ImageGenerator:
 
 
         #If last batch is smaller than others, completing batch by reusing images from beginning of training data set
-        A = np.empty((self.batch_size,self.image_size[0],self.image_size[1],self.image_size[2]),dtype='uint8')
+        #initializing image array
+        images = np.empty((self.batch_size,self.image_size[0],self.image_size[1],self.image_size[2]),dtype='uint8')
         batch_indices = np.arange(self.batch_start,self.batch_start + self.batch_size)
 
         if np.max(batch_indices) > self.N_images:
@@ -84,18 +85,16 @@ class ImageGenerator:
             batch_indices = batch_indices[:-remaining]
             previous_image_index = np.arange(remaining)
             batch_indices = np.append(batch_indices, previous_image_index)
-            if batch_indices[0]==0:
-                self.batch_start = 0
+            #if batch_indices[0]==0:
+            #    self.batch_start = 0
 
-
-        images = self.extracted_images[batch_indices,:]
+        # extracting images, labels from the whole image array and label array respectively with batch indices
+        A = self.extracted_images[batch_indices,:]
         labels = self.class_names[self.batch_start: self.batch_start + self.batch_size]
 
-
-
-
+        # resizing the images
         for i in range(len(batch_indices)):
-            A[i] = np.resize(images[i],(self.image_size[0],self.image_size[1],self.image_size[2]))
+            images[i] = np.resize(A[i],(self.image_size[0],self.image_size[1],self.image_size[2]))
 
         # Rotating n random images that batch contains both rotated and non-rotated images
 
@@ -104,11 +103,11 @@ class ImageGenerator:
             for j in range(num):
                 n = random.randint(1, 3)
                 if n == 1:
-                    A[j] = ndimage.rotate(A[j], 90)
+                    images[j] = ndimage.rotate(images[j], 90)
                 elif n == 2:
-                    A[j] = ndimage.rotate(A[j], 180)
+                    images[j] = ndimage.rotate(images[j], 180)
                 else:
-                    A[j] = ndimage.rotate(A[j], 270)
+                    images[j] = ndimage.rotate(images[j], 270)
 
 
 
@@ -117,19 +116,19 @@ class ImageGenerator:
             for k in range(num_mirror):
                 n = random.randint(0, 1)
                 if n==0:
-                    A[k] = A[k][::-1,:,:]
+                    images[k] = images[k][::-1,:,:]
 
         if self.shuffle:
-            original_images = A.copy()
+            original_images = images.copy()
             original_labels = labels.copy()
             new_order = np.random.permutation(len(A))
             for j in range(len(A)):
-                A[j] = original_images[new_order[j]]
+                images[j] = original_images[new_order[j]]
                 labels[j] = original_labels[new_order[j]]
 
         self.batch_start = self.batch_start + self.batch_size
 
-        return A, labels
+        return images, labels
 
     #def augment(self, img):
         #
