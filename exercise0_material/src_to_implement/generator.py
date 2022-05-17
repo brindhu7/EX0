@@ -75,22 +75,21 @@ class ImageGenerator:
         # Think about how to handle such cases
         # Shuffling extracted_images and class_names
 
-        if not self.shuffled:
-            if self.shuffle:
-                self.shuffled = True
-                permutation_indices = np.random.permutation(self.N_images)
-                extracted_images = self.extracted_images[permutation_indices]
-                class_names = self.class_names[permutation_indices]
-            else:
-                extracted_images = self.extracted_images.copy()
-                class_names = self.class_names.copy()
+        extracted_images = self.extracted_images.copy()
+        class_names = self.class_names.copy()
+
+        if self.shuffle and not self.shuffled :
+            self.shuffled = True
+            permutation_indices = np.random.permutation(self.N_images)
+            extracted_images = self.extracted_images[permutation_indices]
+            class_names = self.class_names[permutation_indices]
 
         images = np.empty((self.batch_size, self.image_size[0], self.image_size[1], self.image_size[2]),
                           dtype='uint8')
 
         batch_indices = np.arange(self.batch_index, self.batch_index + self.batch_size)
         if np.max(batch_indices) > self.N_images:
-            self.process_once  = True
+            self.process_once = True
             remaining = np.max(batch_indices) - (self.N_images - 1)
             batch_indices = batch_indices[:-remaining]
             previous_image_index = np.arange(remaining)
@@ -128,6 +127,4 @@ class ImageGenerator:
         # return the current epoch number
         if self.process_once:
             self.epoch += 1
-            self.batch_start = 0
-
         return self.epoch
