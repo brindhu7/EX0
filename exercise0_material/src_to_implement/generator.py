@@ -33,7 +33,7 @@ class ImageGenerator:
         self.rotation = rotation
         self.mirroring = mirroring
         self.shuffle = shuffle
-        self.current_epoch = 0
+
         self.batch_index = 0
         self.shuffled = False
         self.process_once = False
@@ -78,22 +78,17 @@ class ImageGenerator:
         extracted_images = self.extracted_images.copy()
         class_names = self.class_names.copy()
 
-        if self.shuffle and not self.shuffled :
-            self.shuffled = True
-            permutation_indices = np.random.permutation(self.N_images)
-            extracted_images = self.extracted_images[permutation_indices]
-            class_names = self.class_names[permutation_indices]
-
         images = np.empty((self.batch_size, self.image_size[0], self.image_size[1], self.image_size[2]),
                           dtype='uint8')
 
         batch_indices = np.arange(self.batch_index, self.batch_index + self.batch_size)
         if np.max(batch_indices) > self.N_images:
-            self.process_once = True
+            self.process_once  = True
             remaining = np.max(batch_indices) - (self.N_images - 1)
             batch_indices = batch_indices[:-remaining]
             previous_image_index = np.arange(remaining)
             batch_indices = np.append(batch_indices, previous_image_index)
+
 
         A = extracted_images[batch_indices, :]
         labels = class_names[batch_indices]
@@ -119,12 +114,24 @@ class ImageGenerator:
                 if n == 0:
                     images[k] = images[k][::-1, :, :]
 
+
+
+        if self.shuffle:
+
+            image_array = images.copy()
+            label_array = labels.copy()
+            permutation_indices = np.random.permutation(len(images))
+            images = image_array[permutation_indices]
+            labels = label_array[permutation_indices]
+
         self.batch_index = self.batch_index + self.batch_size
 
-        return images,labels
+        return  images,labels
 
     def current_epoch(self):
         # return the current epoch number
         if self.process_once:
             self.epoch += 1
+            self.batch_start = 0
+
         return self.epoch
