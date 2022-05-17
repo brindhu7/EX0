@@ -126,7 +126,7 @@ class ImageGenerator:
 
         self.batch_index = self.batch_index + self.batch_size
 
-        return  images,labels
+        return images,labels
 
     def current_epoch(self):
         # return the current epoch number
