@@ -109,8 +109,6 @@ class ImageGenerator:
                 else:
                     images[j] = ndimage.rotate(images[j], 270)
 
-
-
         if self.mirroring:
             num_mirror = np.random.randint(self.batch_size)
             for k in range(num_mirror):
