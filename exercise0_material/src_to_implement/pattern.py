@@ -55,5 +55,18 @@ class Spectrum:
         self.resolution = resolution
         self.output = None
 
+    def draw(self):
 
-        
+        image_array1 = np.linspace(0,1,self.resolution)
+
+        image_array2 = np.transpose(image_array1)
+        image_array3 = np.linspace(1,0,self.resolution)
+
+        self.output = np.stack((image_array1,image_array2,image_array3))
+
+        return self.output.copy()
+
+    def show(self):
+
+        plt.imshow(self.output)
+        plt.show()
