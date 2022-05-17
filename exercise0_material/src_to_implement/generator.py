@@ -82,12 +82,14 @@ class ImageGenerator:
                           dtype='uint8')
 
         batch_indices = np.arange(self.batch_index, self.batch_index + self.batch_size)
-        if np.max(batch_indices) > self.N_images:
-            self.process_once  = True
+        if np.max(batch_indices) >= self.N_images:
+            self.process_once = True
             remaining = np.max(batch_indices) - (self.N_images - 1)
             batch_indices = batch_indices[:-remaining]
             previous_image_index = np.arange(remaining)
             batch_indices = np.append(batch_indices, previous_image_index)
+
+
 
 
         A = extracted_images[batch_indices, :]
@@ -132,6 +134,5 @@ class ImageGenerator:
         # return the current epoch number
         if self.process_once:
             self.epoch += 1
-            self.batch_start = 0
 
         return self.epoch
