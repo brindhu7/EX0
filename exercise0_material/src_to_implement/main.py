@@ -12,3 +12,4 @@ from pattern import Spectrum
 obj3 = Spectrum(255)
 obj3.draw()
 obj3.show()
+obj4 = Spectrum(255)
