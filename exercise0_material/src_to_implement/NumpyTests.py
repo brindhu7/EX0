@@ -3,6 +3,8 @@ import numpy as np
 #import tabulate
 import argparse
 
+import tabulate as tabulate
+
 ID = 0  # identifier for dispatcher
 
 class TestCheckers(unittest.TestCase):
