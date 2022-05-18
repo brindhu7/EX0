@@ -65,6 +65,11 @@ class ImageGenerator:
 
         return int(image_name)
 
+    def label_name(self,x):
+        image_label = self.class_dict.get(x)
+        return image_label
+
+
 
     def next(self):
         # This function creates a batch of images and corresponding labels and returns them.
