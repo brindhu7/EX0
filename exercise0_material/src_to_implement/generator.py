@@ -35,8 +35,6 @@ class ImageGenerator:
         self.shuffle = shuffle
 
         self.batch_index = 0
-        self.shuffled = False
-        self.process_once = False
         self.epoch = 0
 
         # opening the JSON files - Getting the labels for all images
@@ -75,7 +73,7 @@ class ImageGenerator:
         # Think about how to handle such cases
         # Shuffling extracted_images and class_names
 
-        # Load images and class
+        # deep copy all the images and class names
         extracted_images = self.extracted_images.copy()
         class_names = self.class_names.copy()
 
@@ -94,6 +92,7 @@ class ImageGenerator:
             self.epoch += 1
             # find batch indices greater than total number of images
             indices_greater_than_max_val = np.argwhere(batch_indices >= self.N_images)[:, 0]
+            # Shuffle all images
             if self.shuffle:
                 # check if index detected is less than total image size
                 if np.min(batch_indices) != self.N_images:
@@ -145,7 +144,7 @@ class ImageGenerator:
                 if n == 0:
                     images[k] = images[k][::-1, :, :]
 
-
+        # Shuffling within batchsize
         if self.shuffle:
             image_array = images.copy()
             label_array = labels.copy()
@@ -153,9 +152,29 @@ class ImageGenerator:
             images = image_array[permutation_indices]
             labels = label_array[permutation_indices]
 
-        self.batch_index = self.batch_index + self.batch_size
+        #Resetting batch index after epoch increment
+        if np.max(self.batch_index) < self.N_images:
+            self.batch_index = self.batch_index + self.batch_size
+        else:
+            self.batch_index = len(indices_greater_than_max_val)
 
         return images,labels
 
     def current_epoch(self):
         return self.epoch
+
+    def show(self):
+        # In order to verify that the generator creates batches as required, this functions calls next to get a
+        # batch of images and labels and visualizes it.
+        images, labels = self.next()
+        fig = plt.figure()
+
+        # Plotting
+        for i in range(self.batch_size):
+            plt.subplot(3, 4, i + 1)
+            plt.imshow(images[i])
+            label_name = self.label_name(labels[i])
+            plt.title(label_name)
+            plt.subplots_adjust(hspace=0.5)
+
+        plt.show()
