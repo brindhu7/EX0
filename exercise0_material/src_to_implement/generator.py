@@ -75,29 +75,57 @@ class ImageGenerator:
         # Think about how to handle such cases
         # Shuffling extracted_images and class_names
 
+        # Load images and class
         extracted_images = self.extracted_images.copy()
         class_names = self.class_names.copy()
 
+        # create local buffers
         images = np.empty((self.batch_size, self.image_size[0], self.image_size[1], self.image_size[2]),
                           dtype='uint8')
+        A = np.empty((self.batch_size, self.extracted_images.shape[1], self.extracted_images.shape[2], self.extracted_images.shape[3]),
+                          dtype='uint8')
+        labels = np.zeros((self.batch_size), dtype='int')
 
+        # get new batch indices
         batch_indices = np.arange(self.batch_index, self.batch_index + self.batch_size)
+        # check max of batch index value is greater than total number of images
         if np.max(batch_indices) >= self.N_images:
-            self.process_once = True
-            remaining = np.max(batch_indices) - (self.N_images - 1)
-            batch_indices = batch_indices[:-remaining]
-            previous_image_index = np.arange(remaining)
-            batch_indices = np.append(batch_indices, previous_image_index)
+            # increment epoch as it complete one iteration over all available images
+            self.epoch += 1
+            # find batch indices greater than total number of images
+            indices_greater_than_max_val = np.argwhere(batch_indices >= self.N_images)[:, 0]
+            if self.shuffle:
+                # check if index detected is less than total image size
+                if np.min(batch_indices) != self.N_images:
+                    indices_less_than_max_val = np.argwhere(batch_indices < self.N_images)
+                    A[indices_less_than_max_val, :, :, :] = extracted_images[batch_indices[indices_less_than_max_val], :]
+                    labels[indices_less_than_max_val] = class_names[batch_indices[indices_less_than_max_val]]
+                # shuffle all data again
+                permutation_indices = np.random.permutation(self.extracted_images.shape[0])
+                self.extracted_images = self.extracted_images[permutation_indices]
+                self.class_names = self.class_names[permutation_indices]
+                extracted_images = self.extracted_images.copy()
+                class_names = self.class_names.copy()
+                # Create cyclic indices and fill new shuffled data
+                new_indices_cyclic = np.arange(0, len(indices_greater_than_max_val))
+                A[indices_greater_than_max_val, :, :, :] = extracted_images[new_indices_cyclic, :]
+                labels[indices_greater_than_max_val] = class_names[new_indices_cyclic]
+            else:
+                # Create cyclic indices and fill the data from the beginning
+                batch_indices[indices_greater_than_max_val] = np.arange(0, len(indices_greater_than_max_val))
+                labels[indices_greater_than_max_val] = class_names[0:len(indices_greater_than_max_val)]
+                A[:] = extracted_images[batch_indices, :]
+                labels[:] = class_names[batch_indices]
+        else:
+            # get the data
+            A[:] = extracted_images[batch_indices, :]
+            labels[:] = class_names[batch_indices]
 
-
-
-
-        A = extracted_images[batch_indices, :]
-        labels = class_names[batch_indices]
-
+        # resize the image
         for i in range(len(batch_indices)):
             images[i] = np.resize(A[i], (self.image_size[0], self.image_size[1], self.image_size[2]))
 
+        # Apply rotation to few images
         if self.rotation:
             num = np.random.randint(self.batch_size)
             for j in range(num):
@@ -109,6 +137,7 @@ class ImageGenerator:
                 else:
                     images[j] = ndimage.rotate(images[j], 270)
 
+        # Apply mirroring to few images
         if self.mirroring:
             num_mirror = np.random.randint(self.batch_size)
             for k in range(num_mirror):
@@ -117,9 +146,7 @@ class ImageGenerator:
                     images[k] = images[k][::-1, :, :]
 
 
-
         if self.shuffle:
-
             image_array = images.copy()
             label_array = labels.copy()
             permutation_indices = np.random.permutation(len(images))
@@ -131,8 +158,4 @@ class ImageGenerator:
         return images,labels
 
     def current_epoch(self):
-        # return the current epoch number
-        if self.process_once:
-            self.epoch += 1
-
         return self.epoch
