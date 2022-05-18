@@ -18,6 +18,7 @@ class Checker:
         hs0 = np.hstack((zero_horizontal,ones_horizontal))
         hs1 = np.hstack((ones_horizontal,zero_horizontal))
         first_tile_array = np.vstack((hs0,hs1))
+
         #Repeating the pattern
         self.output = np.tile(first_tile_array,(no_of_tiles//2,no_of_tiles//2))
         return self.output.copy()
@@ -57,12 +58,12 @@ class Spectrum:
 
     def draw(self):
 
-        image_array1 = np.linspace(0,1,self.resolution)
+        image_array1 = np.tile(np.linspace(0,1,self.resolution),(self.resolution,1))
 
         image_array2 = np.transpose(image_array1)
-        image_array3 = np.linspace(1,0,self.resolution)
+        image_array3 = np.tile(np.linspace(1,0,self.resolution),(self.resolution,1))
 
-        self.output = np.stack((image_array1,image_array2,image_array3))
+        self.output = np.stack((image_array1,image_array2,image_array3),axis=2)
 
         return self.output.copy()
 
