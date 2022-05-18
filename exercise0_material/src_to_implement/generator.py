@@ -75,7 +75,7 @@ class ImageGenerator:
         # Think about how to handle such cases
         # Shuffling extracted_images and class_names
 
-        # Load images and class
+        # deep copy all the images and class names
         extracted_images = self.extracted_images.copy()
         class_names = self.class_names.copy()
 
@@ -94,6 +94,7 @@ class ImageGenerator:
             self.epoch += 1
             # find batch indices greater than total number of images
             indices_greater_than_max_val = np.argwhere(batch_indices >= self.N_images)[:, 0]
+            # Shuffle all images
             if self.shuffle:
                 # check if index detected is less than total image size
                 if np.min(batch_indices) != self.N_images:
@@ -112,6 +113,7 @@ class ImageGenerator:
                 labels[indices_greater_than_max_val] = class_names[new_indices_cyclic]
             else:
                 # Create cyclic indices and fill the data from the beginning
+                #
                 batch_indices[indices_greater_than_max_val] = np.arange(0, len(indices_greater_than_max_val))
                 labels[indices_greater_than_max_val] = class_names[0:len(indices_greater_than_max_val)]
                 A[:] = extracted_images[batch_indices, :]
@@ -145,7 +147,7 @@ class ImageGenerator:
                 if n == 0:
                     images[k] = images[k][::-1, :, :]
 
-
+        # Shuffling within batchsize
         if self.shuffle:
             image_array = images.copy()
             label_array = labels.copy()
@@ -153,7 +155,10 @@ class ImageGenerator:
             images = image_array[permutation_indices]
             labels = label_array[permutation_indices]
 
-        self.batch_index = self.batch_index + self.batch_size
+        if np.max(self.batch_index) < self.N_images:
+            self.batch_index = self.batch_index + self.batch_size
+        else:
+            self.batch_index = len(indices_greater_than_max_val)
 
         return images,labels
 
