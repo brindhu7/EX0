@@ -56,13 +56,13 @@ class Spectrum:
         self.output = None
 
     def draw(self):
+        red_ch = np.linspace(0, 1, self.resolution)[np.newaxis, :] * np.ones([1, self.resolution])
 
-        image_array1 = np.linspace(0,1,self.resolution)
+        blue_ch = np.linspace(1, 0, self.resolution)[np.newaxis, :] * np.linspace(1, 0.5, self.resolution)[:, np.newaxis]
 
-        image_array2 = np.transpose(image_array1)
-        image_array3 = np.linspace(1,0,self.resolution)
+        green_ch = np.linspace(0.5, 1, self.resolution)[np.newaxis, :] * np.linspace(0, 1, self.resolution)[:, np.newaxis]
 
-        self.output = np.stack((image_array1,image_array2,image_array3))
+        self.output = np.stack((red_ch,green_ch,blue_ch))
 
         return self.output.copy()
 
