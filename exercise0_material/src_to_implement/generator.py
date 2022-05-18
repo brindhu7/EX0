@@ -35,8 +35,6 @@ class ImageGenerator:
         self.shuffle = shuffle
 
         self.batch_index = 0
-        self.shuffled = False
-        self.process_once = False
         self.epoch = 0
 
         # opening the JSON files - Getting the labels for all images
@@ -113,7 +111,6 @@ class ImageGenerator:
                 labels[indices_greater_than_max_val] = class_names[new_indices_cyclic]
             else:
                 # Create cyclic indices and fill the data from the beginning
-                #
                 batch_indices[indices_greater_than_max_val] = np.arange(0, len(indices_greater_than_max_val))
                 labels[indices_greater_than_max_val] = class_names[0:len(indices_greater_than_max_val)]
                 A[:] = extracted_images[batch_indices, :]
@@ -155,6 +152,7 @@ class ImageGenerator:
             images = image_array[permutation_indices]
             labels = label_array[permutation_indices]
 
+        #Resetting batch index after epoch increment
         if np.max(self.batch_index) < self.N_images:
             self.batch_index = self.batch_index + self.batch_size
         else:
